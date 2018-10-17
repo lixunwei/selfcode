@@ -26,4 +26,10 @@ RBNode Tnull = {
 
 RBNode *T = &Tnull;
 
+
+extern RBNode *NewNode(int val);
+extern RBTree *NewRBTree(int val);
+extern void RB_DeleteNode(RBTree *tree, RBNode *delete);
+extern void RB_InsertNode(RBTree *tree, RBNode *new);
+
 #endif

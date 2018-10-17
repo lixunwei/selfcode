@@ -23,7 +23,7 @@ RBTree *NewRBTree(int val)
     return tree;
 }
 
-void Left_Rotate(RBTree *tree, RBNode *pivot)
+static void Left_Rotate(RBTree *tree, RBNode *pivot)
 {
     RBNode *right = pivot->right;
 
@@ -41,7 +41,7 @@ void Left_Rotate(RBTree *tree, RBNode *pivot)
         right->parents->right = right;
 }
 
-void Right_Rotate(RBTree *tree, RBNode *pivot)
+static void Right_Rotate(RBTree *tree, RBNode *pivot)
 {
     RBNode *left = pivot->left;
 
@@ -59,7 +59,7 @@ void Right_Rotate(RBTree *tree, RBNode *pivot)
         left->parents->right = left;
 }
 
-void RB_InsertFix(RBTree *tree, RBNode *new)
+static void RB_InsertFix(RBTree *tree, RBNode *new)
 {
     RBNode *current = new;
     RBNode *uncle;
@@ -84,6 +84,7 @@ void RB_InsertFix(RBTree *tree, RBNode *new)
             current->parents->parents->color = RB_RED; //case 3: uncle is black and current in left child tree
             current->parents->color = RB_BLACK;
             Right_Rotate(tree, current->parents->parents);
+            break;
         }
         if (current->parents == current->parents->parents->right) {
             uncle = current->parents->parents->left;
@@ -95,7 +96,7 @@ void RB_InsertFix(RBTree *tree, RBNode *new)
                 current->color = RB_RED;
                 continue;
             }
-            if (current = current->parents->left)
+            if (current == current->parents->left)
             {
                 current = current->parents;
                 Right_Rotate(tree, current);
@@ -104,6 +105,7 @@ void RB_InsertFix(RBTree *tree, RBNode *new)
             current->parents->parents->color = RB_RED;
             current->parents->color = RB_BLACK;
             Left_Rotate(tree, current->parents->parents);
+            break;
         }
     }
     tree->root->color = RB_BLACK;
@@ -134,14 +136,14 @@ void RB_InsertNode(RBTree *tree, RBNode *new)
     RB_InsertFix(tree, new);
 }
 
-RBNode *MinNode(RBTree *tree, RBNode *node)
+static RBNode *MinNode(RBTree *tree, RBNode *node)
 {
     while(node->left != T)
         node = node->left;
     return node;
 }
 
-void RB_Transplat(RBTree *tree, RBNode *old, RBNode *new)
+static void RB_Transplat(RBTree *tree, RBNode *old, RBNode *new)
 {
     if (tree->root == old)
         tree->root = new;
@@ -153,56 +155,58 @@ void RB_Transplat(RBTree *tree, RBNode *old, RBNode *new)
         new->parents = old->parents;
 }
 
-void RB_FixDelete(RBTree *tree, RBNode *current)
+static void RB_FixDelete(RBTree *tree, RBNode *current)
 {
+    RBNode *brother;
+
     while (current != tree->root && current->color == RB_BLACK) {
         if (current == current->parents->left) {
-            if (current->parents->right->color == RB_RED) { //case 1 : brother node is red
-                Left_Rotate(tree, current->parents);
-                current->parents->right->color = RB_BLACK;
+            brother = current->parents->right;
+            if (brother->color == RB_RED) { //case 1 : brother node is red
+                brother->color = RB_BLACK;
                 current->parents->color = RB_RED;
+                Left_Rotate(tree, current->parents);
                 continue;
             }
-            if (current->parents->right->right->color == RB_RED) {
-                current->parents->right->right->color = RB_BLACK;
-                current->parents->right->color = current->parents->color;
+            if (brother->right->color == RB_RED) {
+                brother->right->color = RB_BLACK;
+                brother->color = current->parents->color;
                 current->parents->color = RB_BLACK;
                 Left_Rotate(tree, current->parents);
                 current = tree->root;
                 break;
             }
-            if (current->parents->right->left->color == RB_RED) {
-                current->parents->right->left->color = RB_BLACK;
-                current->parents->right->color = RB_RED;
-                Right_Rotate(tree, current->parents->right);
+            if (brother->left->color == RB_RED) {
+                brother->left->color = RB_BLACK;
+                brother->color = RB_RED;
+                Right_Rotate(tree, brother);
                 continue;
             }
-            current->parents->right->color = RB_RED;
+            brother->color = RB_RED;
             current = current->parents;
-        }
-
-        if (current == current->parents->right) {
-            if (current->parents->left->color == RB_RED) {
-                Right_Rotate(tree, current->parents);
-                current->parents->left->color = RB_BLACK;
+        }else if (current == current->parents->right) {
+            brother = current->parents->left;
+            if (brother->color == RB_RED) {
+                brother->color = RB_BLACK;
                 current->parents->color = RB_RED;
+                Right_Rotate(tree, current->parents);
                 continue;
             }
-            if (current->parents->left->left->color == RB_RED) {
-                current->parents->left->left->color = RB_BLACK;
-                current->parents->left->color = current->parents->color;
+            if (brother->left->color == RB_RED) {
+                brother->left->color = RB_BLACK;
+                brother->color = current->parents->color;
                 current->parents->color = RB_BLACK;
                 Right_Rotate(tree, current->parents);
                 current = tree->root;
                 break;
             }
-            if (current->parents->left->right->color == RB_RED) {
-                current->parents->left->right->color = RB_BLACK;
-                current->parents->left->color = RB_RED;
-                Left_Rotate(tree, current->parents->left);
+            if (brother->right->color == RB_RED) {
+                brother->right->color = RB_BLACK;
+                brother->color = RB_RED;
+                Left_Rotate(tree, brother);
                 continue;
             }
-            current->parents->left->color = RB_RED;
+            brother->color = RB_RED;
             current = current->parents;
         }
     }
@@ -224,6 +228,7 @@ void RB_DeleteNode(RBTree *tree, RBNode *delete)
         RBNode *min = MinNode(tree, delete->right);
         color = min->color;
         current = min->right;
+        min->color = delete->color;
         if (min->parents == delete) {
             min->left = delete->left;
             delete->left->parents = min;
@@ -240,13 +245,44 @@ void RB_DeleteNode(RBTree *tree, RBNode *delete)
 
     if (color == RB_BLACK)
         RB_FixDelete(tree, current);
+    T->parents = NULL;
+}
+
+void RB_walkTreeRec(RBNode *root)
+{
+    if (root != T) {
+        RB_walkTreeRec(root->left);
+        printf("%u\n", root->value);
+        RB_walkTreeRec(root->right);
+    }
+}
+
+unsigned int RB_SelfTest(RBNode *root)
+{
+    unsigned int ret = 0;
+    unsigned int rret;
+    unsigned int lret;
+    if (root != T) {
+        lret = RB_SelfTest(root->left);
+        ret = lret;
+        if (root->color == RB_BLACK)
+            ret += 1;
+        rret = RB_SelfTest(root->right);
+        if (lret != rret)
+            printf("error val=%u\n", root->value);
+    }
+    return ret;
 }
 
 int main(int argc, char *argv[])
 {
     int i = 0;
     RBTree *tree = NewRBTree(50);
-
+    RBNode *arr[1000];
+    //for (; i < 1000; i++) {
+     //   arr[i] = NewNode(random()%1000);
+      //  RB_InsertNode(tree, arr[i]);
+    //}
     RBNode *b1 = NewNode(18);
     RBNode *b2 = NewNode(20);
     RBNode *b3 = NewNode(6);
@@ -257,6 +293,10 @@ int main(int argc, char *argv[])
     RBNode *b8 = NewNode(12);
     RBNode *b9 = NewNode(30);
     RBNode *b10 = NewNode(41);
+    RBNode *b11 = NewNode(941);
+    RBNode *b12 = NewNode(2);
+    RBNode *b13 = NewNode(8);
+    RBNode *b14 = NewNode(55);
 
     RB_InsertNode(tree, b1);
     RB_InsertNode(tree, b2);
@@ -268,4 +308,22 @@ int main(int argc, char *argv[])
     RB_InsertNode(tree, b8);
     RB_InsertNode(tree, b9);
     RB_InsertNode(tree, b10);
+    RB_InsertNode(tree, b11);
+    RB_InsertNode(tree, b12);
+    RB_InsertNode(tree, b13);
+    RB_InsertNode(tree, b14);
+
+    RB_DeleteNode(tree, b11);
+    RB_DeleteNode(tree, b10);
+    RB_DeleteNode(tree, b14);
+    RB_DeleteNode(tree, b3);
+    RB_DeleteNode(tree, b10);
+    RB_DeleteNode(tree, b1);
+    //i = 0;
+    //for (; i < 100; i++) {
+     //   RB_DeleteNode(tree, arr[i]);
+      //  RB_SelfTest(tree->root);
+    //}
+    RB_walkTreeRec(tree->root);
+    //RB_SelfTest(tree->root);
 }
