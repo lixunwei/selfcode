@@ -19,8 +19,8 @@ static struct option opts[] = {
 };
 
 const char *helptext =
-"fotaserver software v0.1 (2018-10-31)\n"
-"Uage:fotaserver [-p|--path path -k|--key key] \n"
+"fotarcv software v0.1 (2018-10-31)\n"
+"Uage:fotarcv [-p|--path path -k|--key key | --type num] \n"
 "fota server programe\n"
 "\t--path path      \tshared message path\n"
 "\t--key  key       \tshared message queue key\n"
@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
 	uint32_t id = MSG_FOTA_SERVER_ID;
 	uint32_t val = UINT32_MAX;
 	uint32_t msgtype = UINT32_MAX;
-	struct msgbuf_bar *buf;
-	struct msgbuf_ctl *ctlbuf;
+	struct msgbuf_bar buf;
+	struct msgbuf_ctl ctlbuf;
 	char *path = COMMON_PATH;
 
 	while ((arg = getopt_long(argc, argv, "f:h", opts, &index)) != -1)
@@ -108,32 +108,24 @@ int main(int argc, char *argv[])
 				break;
 		}
 	}
-	if (optind < argc) {
-		val = strtoul(argv[optind++], NULL, 0);
-	}
-
-	msgid = get_systemv_message(path, id,IPC_CREAT|SVMSG_MODE);
+	
+	msgid = get_systemv_message(path, id, IPC_CREAT|SVMSG_MODE);
 	if (msgid < 0)
 		exit(MSG_CREATE_FAILED);
 
-	send_val_check(msgtype, val);
 	switch(msgtype) {
 		case MSG_TYPE_BAR:
 		{
-			if ((buf = malloc(sizeof(*buf))) != NULL) {
-				buf->type = MSG_TYPE_BAR;
-				buf->rate = val;
-				msgsnd(msgid, buf, sizeof(struct msgbuf_bar), 0);
-			}
+			msgrcv(msgid, &buf, sizeof(struct msgbuf_bar), MSG_TYPE_BAR, IPC_NOWAIT);
+			//if (errno != ENOMSG)
+				printf("Msgid:%d Type:FotaBar val:%u\n", msgid, buf.rate);
 			break;
 		}
 		case MSG_TYPE_CTL:
 		{
-			if ((ctlbuf = malloc(sizeof(*ctlbuf))) != NULL) {
-				ctlbuf->type = MSG_TYPE_CTL;
-				ctlbuf->cmd = val;
-				msgsnd(msgid, ctlbuf, sizeof(struct msgbuf_ctl), 0);
-			}
+			msgrcv(msgid, &ctlbuf, sizeof(struct msgbuf_ctl), MSG_TYPE_CTL, IPC_NOWAIT);
+			//if (errno != ENOMSG)
+				printf("Msgid:%d Type:FotaCtl val:%u\n", msgid, ctlbuf.cmd);
 			break;
 		}
 	}

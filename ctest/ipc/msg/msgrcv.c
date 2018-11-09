@@ -29,7 +29,7 @@ static void print_help(void)
     exit(1);
 }
 
-int get_systemv_message(const char *path, int id, int msgflag)
+static int get_systemv_message(const char *path, int id, int msgflag)
 {
 	key_t key;
 	int msgid;
@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
 	int appmsgid;
 	struct msgbuf_bar *buf;
 	struct msgbuf_bar *sendbuf;
+	struct msgbuf_ctl *ctlbuf;
 	uint32_t GetRate = 0;
 	uint32_t CurrentRate = 0;
 	int arg;
@@ -87,24 +88,28 @@ int main(int argc, char *argv[])
 		exit(MSG_CREATE_FAILED);
 
 	buf = (struct msgbuf_bar *)malloc(sizeof(struct msgbuf_bar));
+	ctlbuf = (struct msgbuf_ctl *)malloc(sizeof(struct msgbuf_ctl));
 	sendbuf = (struct msgbuf_bar *)malloc(sizeof(struct msgbuf_bar));
-	if (NULL == buf || NULL == sendbuf) {
+	if (NULL == buf || NULL == ctlbuf || NULL == sendbuf) {
 		printf("Memory is not enough\n");
 		exit(MSG_MEMORY_NOT_ENOUGH);
 	}
-	sendbuf->type = 1;
+	sendbuf->type = MSG_TYPE_BAR;
 	buf->rate = 0;
 	while(1) {
-		msgrcv(fotamsgid, buf, sizeof(struct msgbuf_bar), 1, IPC_NOWAIT);
+		msgrcv(fotamsgid, buf, sizeof(struct msgbuf_bar), MSG_TYPE_BAR, IPC_NOWAIT);
+		msgrcv(fotamsgid, ctlbuf, sizeof(struct msgbuf_ctl), MSG_TYPE_CTL, IPC_NOWAIT);
 		GetRate = buf->rate;
 		printf("get rate:%d\n", buf->rate);
+		if (ctlbuf->cmd == FOTA_PROCESS_EXIT)
+            break;
 		if (GetRate == 100) {
 			sendbuf->rate = 100;
 			msgsnd(appmsgid, sendbuf, sizeof(struct msgbuf_bar), 0);
 			break;
 		}
 		if (CurrentRate < GetRate && CurrentRate < 100) {
-			sendbuf->rate = CurrentRate;
+			sendbuf->rate = CurrentRate++;
 			msgsnd(appmsgid, sendbuf, sizeof(struct msgbuf_bar), 0);
 		}
 		sleep(2);

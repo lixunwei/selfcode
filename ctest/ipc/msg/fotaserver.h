@@ -6,6 +6,10 @@ struct msgbuf_bar {
     uint32_t rate;
 };
 
+struct msgbuf_ctl {
+    long type;
+    uint32_t cmd;
+};
 //Message create key
 #define COMMON_PATH     "/usr/bin/ab_full_update"
 #define MSG_FOTA_SERVER_ID  777
@@ -13,6 +17,13 @@ struct msgbuf_bar {
 
 //Message type
 #define MSG_TYPE_BAR    1
+#define MSG_TYPE_CTL    2
+
+enum CTL_INFO {
+    FOTA_PROCESS_START = 1,
+    FOTA_PROCESS_EXIT  = 2,
+    FOTA_CTL_INFO_MAX,
+};
 
 //Message queue permission
 #define MSG_R (0400)
