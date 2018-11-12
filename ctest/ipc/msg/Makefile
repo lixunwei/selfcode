@@ -2,25 +2,17 @@ ifdef DEBUG
 	CFLAGS=-g
 endif
 
-all: msgsnd.out msgrcv.out posix_msg.out posix_send.out posix_rcv.out
+Result = msgsnd.out msgrcv.out posix_msg.out posix_send.out \
+		 posix_rcv.out posix_trcv.out
 
+all : $(Result)
 
-msgsnd.out : msgsnd.c
-	${CC} ${CFLAGS} $< -o $@
+$(filter posix_%.out,$(Result)) : LDFLAGS=-lrt
 
-msgrcv.out : msgrcv.c
-	${CC} ${CFLAGS} $< -o $@
-
-posix_msg.out : posix_msg.c
-	${CC} ${CFLAGS} $< -o $@ -lrt
-
-posix_send.out : posix_send.c
-	${CC} ${CFLAGS} $< -o $@ -lrt
-
-posix_rcv.out : posix_rcv.c
-	${CC} ${CFLAGS} $< -o $@ -lrt
+$(Result) : %.out : %.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 .PHONY : clean
 
 clean :
-	${RM} msgsnd.out msgrcv.out posix_msg.out
+	$(RM) $(Result)
