@@ -324,12 +324,26 @@ void SEQ_walkTreeRec(SEQNode *root)
     }
 }
 
+SEQNode * SEQ_Walk(SEQNode *root, uint32_t i)
+{
+    uint32_t current;
+
+    current = root->left->size + 1;
+    if ( i == current)
+        return root;
+    else if (i < current)
+        SEQ_Walk(root->left, i);
+    else if (i > current)
+        SEQ_Walk(root->right, i-current);
+}
+
 int main(int argc, char *argv[])
 {
     SEQTree *tree = SEQ_NewTree(500);
     int i = 0;
     SEQNode *arr[10000];
     uint32_t val;
+    SEQNode *node;
     for (; i < 1000; i++) {
         val = random();
         arr[i] = SEQ_NewNode(val%1000);
@@ -341,5 +355,7 @@ int main(int argc, char *argv[])
     }
 
     SEQ_SelfTest(tree->root);
-    //SEQ_walkTreeRec(tree->root);
+    SEQ_walkTreeRec(tree->root);
+    node = SEQ_Walk(tree->root, 99);
+    printf("get node %u\n", node->value);
 }
