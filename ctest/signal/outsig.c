@@ -23,14 +23,14 @@ int main(int argc, char *argv[])
 
     for (; i < 32; i++)
         if (sigblk & (1 << i)) {
-            printf("%-10s is block\n", signame[i]);
+            printf("%-10s is signed\n", signame[i]);
         }
 
     printf("===================================================\n");
 
     for (i=0; i < 32; i++)
         if (!(sigblk & (1 << i))) {
-            printf("%-10s is unblock\n", signame[i]);
+            printf("%-10s is unsigned\n", signame[i]);
         }
 
 }

@@ -1,16 +1,15 @@
 ifdef DEBUG
-	CFLAGS=-g
+	CFLAGS+=-g
 endif
 
-all : sig.out outsig.out
+Result := sig.out outsig.out rt-signal.out
 
-sig.out : sig.c
-	$(CC) $(CFLAGS) -o $@ $<
+all : $(Result)
 
-outsig.out : outsig.c
+$(Result) : %.out : %.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 .PYHONY : clean
 
 clean :
-	$(RM) sig.out
+	$(RM) $(Result)
