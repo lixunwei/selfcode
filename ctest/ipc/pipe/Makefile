@@ -2,7 +2,7 @@ ifdef DEBUG
 	CFLAGS+=-g
 endif
 
-Result := pipe.out
+Result := pipe.out popen.out
 
 all : $(Result)
 
